@@ -3,7 +3,7 @@ import { gateToolCall } from "../src/guard.js";
 
 describe("gateToolCall", () => {
   it("passes an allowlisted command without prompting", async () => {
-    const confirm = vi.fn(async () => true);
+    const confirm = vi.fn(async (_title: string, _message: string) => true);
     const result = await gateToolCall(
       { toolName: "bash", input: { command: "pwd" } },
       { hasUI: true, confirm },
@@ -14,7 +14,7 @@ describe("gateToolCall", () => {
   });
 
   it("passes an approved shell command", async () => {
-    const confirm = vi.fn(async () => true);
+    const confirm = vi.fn(async (_title: string, _message: string) => true);
     const result = await gateToolCall(
       { toolName: "bash", input: { command: "npm install" } },
       { hasUI: true, confirm },
