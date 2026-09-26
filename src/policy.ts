@@ -13,6 +13,21 @@ export interface ToolCall {
 
 const READ_ONLY_TOOLS = new Set(["read", "grep", "find", "ls"]);
 
+// These narrow signatures block common high-impact shell actions before Jev
+// runs. They are defense-in-depth only: shell text is not safely parsed here.
+const HARD_DENY_COMMANDS: RegExp[] = [
+  /\bsudo\b/i,
+  /\bgit\s+push\b[^;\n]*--force\b/i,
+  /\bgit\s+reset\b[^;\n]*--hard\b/i,
+  /\brm\s+-[^\s]*r[^\s]*f\b/i,
+  /\brm\s+-[^\s]*f[^\s]*r\b/i,
+  /\brm\s+-r\s+-f\b/i,
+  /\bmkfs(?:\.\w+)?\b/i,
+  /\bdd\b[^;\n]*\bof=\/dev\/[^\s]+/i,
+  /\b(?:shutdown|reboot|poweroff)\b/i,
+  /(?:\bcurl\b|\bwget\b)[^;\n]*\|\s*(?:sh|bash)\b/i,
+];
+
 // Allow only a few exact shell commands in the first version. Compound shell
 // expressions, extra flags, and all commands with side effects require review.
 const EXACT_READ_ONLY_COMMANDS = new Set([
@@ -39,6 +54,14 @@ export function classifyToolCall(call: ToolCall): PolicyResult {
 
     if (!command) {
       return { decision: "block", reason: "The shell command is missing or empty." };
+    }
+
+    if (HARD_DENY_COMMANDS.some((pattern) => pattern.test(command))) {
+      return {
+        decision: "block",
+        reason: "This shell command matches a locally blocked high-impact action.",
+        subject: command,
+      };
     }
 
     if (EXACT_READ_ONLY_COMMANDS.has(command)) {
