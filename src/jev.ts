@@ -6,18 +6,15 @@ const DEFAULT_MODEL = "typesafe/jev-1.13";
 const DEFAULT_TIMEOUT_MS = 4_000;
 const AUTO_DECISION_THRESHOLD = 0.95;
 
-interface NoulAnswer {
-  type: "noul";
-  noul: number;
-}
-
 function isRecord(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
 function readNoulAnswer(value: unknown, key: string): number {
-  if (!isRecord(value)) throw new Error("Invalid Jev response.");
-  const answer = value[key];
+  if (!isRecord(value) || !isRecord(value.answers)) {
+    throw new Error("Invalid Jev response.");
+  }
+  const answer = value.answers[key];
   if (!isRecord(answer) || answer.type !== "noul" || typeof answer.noul !== "number") {
     throw new Error("Invalid Jev response.");
   }
