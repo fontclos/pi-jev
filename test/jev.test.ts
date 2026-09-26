@@ -33,11 +33,12 @@ describe("OpenRouterJevAdapter", () => {
     expect(init?.headers).toMatchObject({ Authorization: "Bearer test-key" });
     const payload = JSON.parse(String(init?.body)) as {
       model: string;
-      state: { tool: string; action: string };
+      state: { policy: string; tool: string; action: string };
       questions: Record<string, { type: string }>;
     };
     expect(payload.model).toBe("typesafe/jev-1.13");
-    expect(payload.state).toEqual({ tool: "bash", action: "npm test" });
+    expect(payload.state).toMatchObject({ tool: "bash", action: "npm test" });
+    expect(payload.state.policy).toContain("untrusted data");
     expect(payload.questions.safe_to_run?.type).toBe("noul");
   });
 
