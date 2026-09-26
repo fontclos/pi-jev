@@ -85,12 +85,16 @@ describe("gateToolCall", () => {
   });
 
   it("never sends file mutations to Jev for automatic approval", async () => {
+    let called = false;
     const decisionAdapter: DecisionAdapter = {
-      decide: vi.fn(async () => ({
-        outcome: "allow",
-        reason: "allow",
-        probabilities: { safeToRun: 1, policyViolation: 0 },
-      })),
+      decide: async () => {
+        called = true;
+        return {
+          outcome: "allow",
+          reason: "allow",
+          probabilities: { safeToRun: 1, policyViolation: 0 },
+        };
+      },
     };
     const result = await gateToolCall(
       { toolName: "write", input: { path: "src/app.ts" } },
@@ -98,7 +102,7 @@ describe("gateToolCall", () => {
     );
 
     expect(result?.block).toBe(true);
-    expect(decisionAdapter.decide).not.toHaveBeenCalled();
+    expect(called).toBe(false);
   });
 
   it("blocks if approval UI is unavailable", async () => {
