@@ -2,7 +2,7 @@
 
 A Pi coding-agent extension exploring typed decision checks in the agent loop, inspired by the Jev engineering approach. The first milestone is a policy-backed gate for tool calls.
 
-> **Status:** Early implementation. The local gate and its tests are scaffolded; the Jev service adapter is not implemented yet.
+> **Status:** Early implementation. The local gate and optional OpenRouter Jev adapter are in place; behavior still needs validation in Pi and live Jev evaluation.
 
 ## Goal
 
@@ -16,9 +16,13 @@ The extension listens to Pi's pre-execution `tool_call` event.
 
 - Allows Pi's `read`, `grep`, `find`, and `ls` tools.
 - Allows only a small exact allowlist of read-only shell commands.
-- Asks for approval before other shell commands, file writes/edits, and unknown tools.
+- For other shell commands, optionally asks Jev through OpenRouter; strong safe or violation scores map to allow/block, and uncertain results go to human review.
+- Without a Jev key, or if the Jev request fails, shell commands require human approval.
+- File writes/edits and unknown tools always require human approval; they are not sent to Jev for automatic approval.
 - Blocks approval-required actions when no approval UI is available, when the user declines, or when the dialog errors.
 - Blocks empty shell commands.
+
+The Jev adapter sends only the tool name and a short, redacted command summary. It uses the Decisions endpoint and validates both probabilities. A real key is read from `OPENROUTER_API_KEY`; it is not stored in the repository or used by CI.
 
 This is intentionally conservative. The exact shell allowlist is not a general shell parser and is not a sandbox. Treat this as an early prototype.
 
@@ -37,15 +41,19 @@ Load the extension in Pi from this repository:
 pi --extension ./src/extension.ts
 ```
 
-## MVP direction
+To use Jev, set `OPENROUTER_API_KEY` in the environment that starts Pi. The optional `JEV_MODEL` variable defaults to `typesafe/jev-1.13`. Copy `.env.example` as a local reference if helpful, but do not put a real key in a tracked file.
 
-1. Verify Pi's extension hook and approval behavior against supported versions.
-2. Keep deterministic policy checks ahead of model-based judgments.
-3. Add a Jev adapter that accepts and validates a typed `allow`, `ask`, or `block` result.
-4. Add request timeouts, confidence handling, data minimization, and a safe fallback.
-5. Evaluate false allows, false blocks, approval rates, and latency before widening automation.
+## Decision flow
 
-The first Jev adapter should be optional and replaceable with a fake adapter in offline tests.
+```text
+Pi tool call
+  -> deterministic exact allowlist
+  -> Jev for non-allowlisted shell commands (if configured)
+  -> high-confidence allow/block, otherwise human review
+  -> no key, timeout, malformed response, or API error: human review
+```
+
+The current thresholds require at least 0.95 confidence to allow or block. Anything else goes to human review. File mutations and unknown tools bypass Jev and always require a human.
 
 ## Safety rules
 
@@ -57,50 +65,28 @@ The first Jev adapter should be optional and replaceable with a fake adapter in 
 - The gate must not execute commands itself; Pi remains the tool executor.
 - Pi extension handlers run in load order; other extensions may also affect tool calls. Do not treat this extension as the sole security control in a multi-extension setup.
 
-## Proposed architecture
-
-```text
-Pi tool call
-  -> normalize minimal action metadata
-  -> deterministic policy
-  -> decision adapter (fake | Jev)
-  -> validate typed result and confidence
-  -> allow | ask user | block
-```
-
-Keep Jev-specific request and response handling behind an adapter so policy and extension behavior can be tested without network access.
-
-### Initial policy shape
-
-- **Allow:** only explicitly supported read-only actions.
-- **Ask:** ambiguous, potentially destructive, or low-confidence actions.
-- **Block:** malformed calls, explicit deny rules, or requests that cannot be reviewed safely.
-
-Exact command classification and thresholds remain open design decisions. Do not make universal shell-safety claims based on string matching.
-
 ## Milestones
 
-### 0. Verify interfaces and write the contract
+### 0. Verify interfaces and write the contract — in progress
 - Confirm Pi hook, blocking, UI, and supported-version behavior.
-- Confirm the Jev API shape, authentication requirements, timeout behavior, and data sent.
-- Specify typed decision results, policy precedence, and redaction rules.
+- Confirm the OpenRouter Jev Decisions request/response contract.
+- Specify typed decision results, policy precedence, confidence thresholds, and redaction rules.
 
-**Exit:** a short design note and a reviewed decision schema.
+**Exit:** design note and a reviewed decision schema.
 
-### 1. Local extension and test seam — in progress
-- TypeScript project and minimal Pi extension are in place.
-- Conservative allowlist and approval gate are implemented.
-- Unit tests cover core classifications and approval outcomes.
-- Next: run type checks and tests in CI, then verify behavior in Pi.
+### 1. Local extension and test seam — implemented; CI validation pending
+- TypeScript project, minimal Pi extension, conservative allowlist, and approval gate are in place.
+- Offline tests cover local policy, Jev response validation, redaction, and approval outcomes.
+- CI runs type checking and unit tests.
 
-**Exit:** extension loads in Pi; tests pass without credentials or network access.
+**Exit:** passing CI plus a smoke test in Pi.
 
-### 2. Decision adapter
-- Add a fake adapter for offline tests.
-- Implement the optional Jev service adapter after verifying its API contract.
-- Bound request size and latency; avoid sending secrets and unnecessary context.
+### 2. Jev adapter — implemented; live evaluation pending
+- Optional OpenRouter Decisions adapter uses `typesafe/jev-1.13`.
+- Failures fall back to human approval.
+- Next: validate actual provider behavior and evaluate representative command cases.
 
-**Exit:** contract tests cover valid, malformed, uncertain, delayed, and failed responses.
+**Exit:** live contract checks and documented evaluation results.
 
 ### 3. Evaluation and release
 - Build a curated test corpus of benign, destructive, ambiguous, and injection-style tool calls.
@@ -122,11 +108,14 @@ Each later feature should be independently configurable and evaluated before it 
 
 ```text
 src/
+  decision.ts
   extension.ts
   guard.ts
+  jev.ts
   policy.ts
 test/
   guard.test.ts
+  jev.test.ts
   policy.test.ts
 ```
 
@@ -134,9 +123,11 @@ test/
 
 - Pi loads the extension using the documented extension mechanism.
 - Exact allowlisted actions pass without prompting.
-- Other shell commands, file mutations, and unknown tools require confirmation.
+- Non-allowlisted shell commands are allowed/blocked only at high Jev confidence; uncertain and failed checks require approval.
+- File mutations and unknown tools require confirmation.
+- Secrets and unrelated prompt context are not sent to Jev.
 - Calls are blocked when review is unavailable or fails.
-- Tests cover policy outcomes, approval, decline, and UI failure.
+- Tests cover policy outcomes, Jev parsing, redaction, approval, decline, and UI failure.
 - Documentation clearly states that this gate does not sandbox Pi.
 
 ## References
@@ -144,4 +135,4 @@ test/
 - [Pi extensions](https://pi.dev/docs/latest/extensions)
 - [Pi SDK](https://pi.dev/docs/latest/sdk)
 - [Pi security guidance](https://pi.dev/docs/latest)
-- Jev engineering reference: [engineering for coding agents](https://www.jevtypesafeai.com/jev/engineering-for-coding-agents)
+- [OpenRouter: Gate agent tool calls with Jev](https://openrouter.ai/docs/cookbook/building-agents/gate-tool-calls-with-jev)
