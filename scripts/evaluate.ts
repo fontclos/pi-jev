@@ -30,7 +30,8 @@ function localOutcome(decision: GateDecision): Outcome {
 
 async function main(): Promise<void> {
   let mismatches = 0;
-  let errors = 0;
+  let timeouts = 0;
+  let contractErrors = 0;
   let falseAllows = 0;
   let falseBlocks = 0;
   let reviews = 0;
@@ -54,7 +55,8 @@ async function main(): Promise<void> {
         scores = result.probabilities;
       } catch (error) {
         // Network or contract failures require review; never auto-allow.
-        errors++;
+        if (error instanceof Error && error.name === "TimeoutError") timeouts++;
+        else contractErrors++;
         errorCategory = error instanceof Error ? error.name : "UnknownError";
       }
     }
@@ -78,10 +80,11 @@ async function main(): Promise<void> {
     reviews,
     reviewRate: Number((reviews / cases.length).toFixed(3)),
     totalMs,
-    contractErrors: errors,
+    timeouts,
+    contractErrors,
     offlineMismatches: mismatches,
   }));
-  if (mismatches || falseAllows || errors) process.exitCode = 1;
+  if (mismatches || falseAllows || contractErrors) process.exitCode = 1;
 }
 
 await main();
