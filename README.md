@@ -42,7 +42,7 @@ Use a newly rotated key if one has been pasted into a chat or other shared surfa
 
 The local high-impact signatures include force pushes, hard resets, recursive forced removal, privilege escalation, disk formatting, shutdown, and remote scripts piped to a shell. They are deliberately limited and can be evaded by shell syntax. This extension is not a sandbox or a complete command parser. Pi extensions run with the Pi process permissions, and other extensions can affect tool calls.
 
-Jev receives the tool name, a short redacted command summary, a fixed policy, and the explicit task scope. It does not receive the full conversation or repository files. Redaction recognizes common credential forms but cannot guarantee detection of arbitrary secrets. Keep secrets out of shell commands that may be evaluated remotely.
+Jev receives the tool name, a short redacted command summary, a fixed policy, and the explicit task scope. It does not receive the full conversation or repository files. Commands or task scopes with recognized credential forms go to human review without a remote request. Arbitrary secrets cannot be detected reliably, so keep them out of commands that may be evaluated remotely.
 
 See [the decision contract](docs/decision-contract.md) for response validation, policy precedence, and failure behavior.
 
