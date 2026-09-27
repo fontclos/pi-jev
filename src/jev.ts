@@ -44,6 +44,9 @@ export class OpenRouterJevAdapter implements DecisionAdapter {
   async decide(request: DecisionRequest): Promise<DecisionResult> {
     const action = redactForDecision(request.action);
     const task = redactForDecision(this.task);
+    if (action.includes("[REDACTED]") || task.includes("[REDACTED]")) {
+      throw new Error("Sensitive input requires human review.");
+    }
     const response = await this.fetchImpl(DECISIONS_ENDPOINT, {
       method: "POST",
       headers: {
