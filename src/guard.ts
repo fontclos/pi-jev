@@ -63,7 +63,7 @@ export async function gateToolCall(
   if (details.length > 16_000) {
     return { block: true, reason: "The tool input is too large to display for approval." };
   }
-  const message = `${reviewReason}\\n\\nExact tool input:\\n${details}`;
+  const message = `${reviewReason}\n\nExact tool input:\n${details}`;
   try {
     const approved = await context.confirm(`Review ${event.toolName} call`, message);
     if (approved === true) return undefined;
