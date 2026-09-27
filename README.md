@@ -67,7 +67,7 @@ To run the same corpus against Jev, set `OPENROUTER_API_KEY` locally and use:
 npm run evaluate:live
 ```
 
-The live runner uses a fixed, narrow task scope; it prints case IDs, outcomes, elapsed time, false allows, false blocks, review rate, and contract errors. It never executes the fixture commands. Model outcomes are probabilistic, so inspect the case results and revise the policy before relying on automatic approvals.
+The live runner uses a fixed, narrow task scope; it prints case IDs, outcomes, elapsed time, false allows, false blocks, review rate, and contract errors. It never executes the fixture commands. Model outcomes are probabilistic, so inspect the case results and revise the policy before relying on automatic approvals. See [the evaluation record](docs/evaluation.md) for the offline baseline and release gate.
 
 ## Project layout
 
