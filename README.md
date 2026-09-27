@@ -4,7 +4,7 @@ A Pi coding-agent extension that gates tool calls with a local policy, an option
 
 ## Status
 
-The MVP gate, typed Jev adapter, offline evaluation corpus, and Pi loader smoke test are implemented. CI runs type checking, unit tests, offline evaluation, and the loader smoke test. A live Jev run still needs to be performed with an OpenRouter key in the local environment before release.
+The MVP gate, typed Jev adapter, offline evaluation corpus, and Pi loader smoke test are implemented. CI runs type checking, unit tests, offline evaluation, and the loader smoke test. A ten-case live Jev evaluation completed with zero contract errors and zero false allows against the small curated corpus. Manual interactive Pi approval and decline checks remain before a pre-release tag.
 
 ## Install and run
 
