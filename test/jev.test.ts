@@ -77,6 +77,25 @@ describe("OpenRouterJevAdapter", () => {
     expect(fetchImpl).not.toHaveBeenCalled();
   });
 
+  it.each([
+    "echo ok; " + "x".repeat(250) + "; npm publish",
+    "echo ok\\nnpm publish",
+  ])("does not send an incomplete command summary to Jev", async (action) => {
+    const fetchImpl = vi.fn(async () => response({}));
+    const adapter = new OpenRouterJevAdapter("test-key", undefined, 4000, fetchImpl, "Run tests");
+    await expect(adapter.decide({ toolName: "bash", policyReason: "x", action }))
+      .rejects.toThrow("human review");
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it("does not send a truncated task scope to Jev", async () => {
+    const fetchImpl = vi.fn(async () => response({}));
+    const adapter = new OpenRouterJevAdapter("test-key", undefined, 4000, fetchImpl, "x".repeat(241));
+    await expect(adapter.decide({ toolName: "bash", policyReason: "x", action: "npm test" }))
+      .rejects.toThrow("human review");
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
   it("routes ambiguous scores to human review", async () => {
     const adapter = new OpenRouterJevAdapter(
       "test-key",
