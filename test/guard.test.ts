@@ -122,12 +122,12 @@ describe("gateToolCall", () => {
   it("shows the full escaped command to a human reviewer", async () => {
     const confirm = vi.fn(async (_title: string, _message: string) => false);
     await gateToolCall(
-      { toolName: "bash", input: { command: "echo first\\necho second" } },
+      { toolName: "bash", input: { command: "echo first\necho second" } },
       { hasUI: true, confirm },
     );
 
     expect(confirm).toHaveBeenCalledOnce();
-    expect(confirm.mock.calls[0]?.[1]).toContain("echo first\\\\necho second");
+    expect(confirm.mock.calls[0]?.[1]).toContain("echo first\\necho second");
   });
 
   it("blocks tool input too large for complete review", async () => {
