@@ -4,7 +4,7 @@ A Pi coding-agent extension that gates tool calls with a local policy, an option
 
 ## Status
 
-The MVP gate, typed Jev adapter, offline evaluation corpus, and Pi loader smoke test are implemented. CI runs type checking, unit tests, offline evaluation, and the loader smoke test. A ten-case live Jev evaluation completed with zero contract errors and zero false allows against the small curated corpus. Manual interactive Pi approval and decline checks remain before a pre-release tag.
+The MVP gate, typed Jev adapter, offline evaluation corpus, and Pi loader smoke test are implemented. CI runs type checking, unit tests, offline evaluation, and the loader smoke test. A 21-case live Jev evaluation found zero false allows, zero false blocks, and zero contract errors; one timeout safely fell back to human review. The Pi TUI approved one harmless command and showed no execution result after a second command was declined.
 
 ## Install and run
 
