@@ -32,22 +32,36 @@ describe("gateToolCall", () => {
     expect(confirm).not.toHaveBeenCalled();
   });
 
-  it("blocks when Jev identifies a clear policy violation", async () => {
-    const decisionAdapter: DecisionAdapter = {
-      decide: async () => ({
-        outcome: "block",
-        reason: "clear policy violation",
-        probabilities: { safeToRun: 0.01, policyViolation: 0.99 },
-      }),
-    };
+  it("keeps a local block even if Jev would allow it", async () => {
+    const decide = vi.fn(async () => ({
+      outcome: "allow" as const,
+      reason: "safe",
+      probabilities: { safeToRun: 1, policyViolation: 0 },
+    }));
     const confirm = vi.fn(async (_title: string, _message: string) => true);
     const result = await gateToolCall(
       { toolName: "bash", input: { command: "git push --force" } },
-      { hasUI: true, confirm, decisionAdapter },
+      { hasUI: true, confirm, decisionAdapter: { decide } },
     );
 
     expect(result?.block).toBe(true);
+    expect(decide).not.toHaveBeenCalled();
     expect(confirm).not.toHaveBeenCalled();
+  });
+
+  it("blocks when Jev identifies a clear violation outside local rules", async () => {
+    const decide = vi.fn(async () => ({
+      outcome: "block" as const,
+      reason: "clear policy violation",
+      probabilities: { safeToRun: 0.01, policyViolation: 0.99 },
+    }));
+    const result = await gateToolCall(
+      { toolName: "bash", input: { command: "npm publish" } },
+      { hasUI: true, confirm: async () => true, decisionAdapter: { decide } },
+    );
+
+    expect(result?.block).toBe(true);
+    expect(decide).toHaveBeenCalledOnce();
   });
 
   it("routes uncertain Jev results to human approval", async () => {
