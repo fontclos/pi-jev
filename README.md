@@ -44,7 +44,7 @@ Use a newly rotated key if one has been pasted into a chat or other shared surfa
 | Other shell command, with Jev and explicit task scope | Jev may allow or block at 0.95 thresholds; otherwise human review. |
 | Other shell command, without Jev or task scope | Human review. |
 | `write`, `edit`, or unknown tool | Human review; Jev cannot approve it. |
-| Review with no UI, declined approval, or failed dialog | Blocked. |
+| Review with no UI, declined approval, failed dialog, or input too large to display in full | Blocked. |
 
 The local high-impact signatures include force pushes, hard resets, recursive forced removal, privilege escalation, disk formatting, shutdown, and remote scripts piped to a shell. They are deliberately limited and can be evaded by shell syntax. This extension is not a sandbox or a complete command parser. Pi extensions run with the Pi process permissions, and other extensions can affect tool calls.
 
