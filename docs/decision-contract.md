@@ -7,7 +7,7 @@ Pi is the executor. pi-jev handles `tool_call` and either returns no result (Pi 
 | Local policy | Tool name and arguments | Exact read-only calls pass; empty shell calls and recognized high-impact shell signatures block; all other calls require review. |
 | Jev | Non-allowlisted `bash` command, policy, explicit task scope | Two typed `noul` probabilities: `safe_to_run` and `policy_violation`. |
 | Thresholds | Both validated probabilities in [0, 1] | Violation ≥ 0.95 blocks. Safe ≥ 0.95 and violation ≤ 0.05 allows only with a nonempty explicit task scope. Other results request human review. |
-| Human | Review result, no key, timeout, API error, or malformed response | Approval passes; decline, missing UI, or dialog error blocks. |
+| Human | Review result, no key, timeout, API error, or malformed response | Approval passes; decline, missing UI, dialog error, or an input over 16,000 displayed characters blocks. The dialog shows the exact JSON-escaped tool input. |
 
 Local blocks precede Jev. File mutations and unknown tools require human approval and are never automatically approved by Jev. A Jev block is final for that call.
 
