@@ -17,7 +17,7 @@ describe("classifyToolCall", () => {
   });
 
   it.each([
-    "git status --short && rm -rf ./build",
+    "git status --short && echo ok",
     "echo ok",
     "npm install",
     "python -c 'print(1)'",
@@ -26,6 +26,7 @@ describe("classifyToolCall", () => {
   });
 
   it.each([
+    "git status --short && rm -rf ./build",
     "sudo rm -rf /tmp/data",
     "git push origin main --force",
     "git reset --hard HEAD~1",
