@@ -3,14 +3,16 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "A Pi extension for conservative, typed tool-call decisions with a Jev adapter planned.",
+  "description": "A Pi extension for task-scoped Jev tool-call decisions.",
   "engines": {
     "node": ">=22.19"
   },
   "scripts": {
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "check": "npm run typecheck && npm test"
+    "check": "npm run typecheck && npm test && npm run evaluate:offline",
+    "evaluate:offline": "tsx scripts/evaluate.ts",
+    "evaluate:live": "tsx scripts/evaluate.ts --live"
   },
   "peerDependencies": {
     "@earendil-works/pi-coding-agent": "^0.87.1"
@@ -19,6 +21,7 @@
     "@earendil-works/pi-coding-agent": "0.87.1",
     "@types/node": "^22.15.0",
     "typescript": "^5.8.3",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "tsx": "^4.20.3"
   }
 }
