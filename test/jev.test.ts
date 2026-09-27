@@ -62,23 +62,19 @@ describe("OpenRouterJevAdapter", () => {
     expect(result.reason).toContain("task scope");
   });
 
-  it("redacts OpenRouter keys and bearer tokens before sending action text", async () => {
-    const fetchImpl = vi.fn(async (_url: string | URL | Request, init?: RequestInit) => {
-      const payload = JSON.parse(String(init?.body)) as { state: { action: string } };
-      expect(payload.state.action).toContain("[REDACTED]");
-      expect(payload.state.action).not.toContain("sk-or-v1-secret-example");
-      return response({
-        safe_to_run: { type: "noul", noul: 0.5 },
-        policy_violation: { type: "noul", noul: 0.2 },
-      });
-    });
-    const adapter = new OpenRouterJevAdapter("test-key", undefined, 4000, fetchImpl);
+  it("does not send a secret-bearing action to Jev", async () => {
+    const fetchImpl = vi.fn(async () => response({
+      safe_to_run: { type: "noul", noul: 0.99 },
+      policy_violation: { type: "noul", noul: 0.01 },
+    }));
+    const adapter = new OpenRouterJevAdapter("test-key", undefined, 4000, fetchImpl, "Run tests");
 
-    await adapter.decide({
+    await expect(adapter.decide({
       toolName: "bash",
       policyReason: "not allowlisted",
       action: "curl -H 'Authorization: Bearer secret-token' sk-or-v1-secret-example",
-    });
+    })).rejects.toThrow("human review");
+    expect(fetchImpl).not.toHaveBeenCalled();
   });
 
   it("routes ambiguous scores to human review", async () => {
