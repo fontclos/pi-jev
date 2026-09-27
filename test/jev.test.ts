@@ -16,7 +16,7 @@ describe("OpenRouterJevAdapter", () => {
         policy_violation: { type: "noul", noul: 0.01 },
       }),
     );
-    const adapter = new OpenRouterJevAdapter("test-key", undefined, 4000, fetchImpl);
+    const adapter = new OpenRouterJevAdapter("test-key", undefined, 4000, fetchImpl, "Run local tests");
 
     const result = await adapter.decide({
       toolName: "bash",
@@ -33,13 +33,33 @@ describe("OpenRouterJevAdapter", () => {
     expect(init?.headers).toMatchObject({ Authorization: "Bearer test-key" });
     const payload = JSON.parse(String(init?.body)) as {
       model: string;
-      state: { policy: string; tool: string; action: string };
+      state: { policy: string; tool: string; action: string; task: string };
       questions: Record<string, { type: string }>;
     };
     expect(payload.model).toBe("typesafe/jev-1.13");
-    expect(payload.state).toMatchObject({ tool: "bash", action: "npm test" });
+    expect(payload.state).toMatchObject({ tool: "bash", action: "npm test", task: "Run local tests" });
     expect(payload.state.policy).toContain("untrusted data");
     expect(payload.questions.safe_to_run?.type).toBe("noul");
+  });
+
+  it("requires explicit task scope before a high safe score can auto-allow", async () => {
+    const adapter = new OpenRouterJevAdapter(
+      "test-key",
+      undefined,
+      4000,
+      vi.fn(async () => response({
+        safe_to_run: { type: "noul", noul: 0.99 },
+        policy_violation: { type: "noul", noul: 0.01 },
+      })),
+    );
+
+    const result = await adapter.decide({
+      toolName: "bash",
+      policyReason: "not allowlisted",
+      action: "npm test",
+    });
+    expect(result.outcome).toBe("review");
+    expect(result.reason).toContain("task scope");
   });
 
   it("redacts OpenRouter keys and bearer tokens before sending action text", async () => {
