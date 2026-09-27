@@ -10,9 +10,10 @@
   "scripts": {
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
-    "check": "npm run typecheck && npm test && npm run evaluate:offline",
+    "check": "npm run typecheck && npm test && npm run evaluate:offline && npm run smoke:pi",
     "evaluate:offline": "tsx scripts/evaluate.ts",
-    "evaluate:live": "tsx scripts/evaluate.ts --live"
+    "evaluate:live": "tsx scripts/evaluate.ts --live",
+    "smoke:pi": "tsx scripts/smoke-pi.ts"
   },
   "peerDependencies": {
     "@earendil-works/pi-coding-agent": "^0.87.1"
