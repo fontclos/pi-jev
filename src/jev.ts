@@ -3,7 +3,7 @@ import { safeDisplayText } from "./policy.js";
 
 const DECISIONS_ENDPOINT = "https://openrouter.ai/api/alpha/decisions";
 const DEFAULT_MODEL = "typesafe/jev-1.13";
-const DEFAULT_TIMEOUT_MS = 4_000;
+const DEFAULT_TIMEOUT_MS = 10_000;
 const AUTO_DECISION_THRESHOLD = 0.95;
 
 function isRecord(value: unknown): value is Record<string, unknown> {
