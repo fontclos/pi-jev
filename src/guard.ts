@@ -1,5 +1,5 @@
 import type { DecisionAdapter } from "./decision.js";
-import { classifyToolCall, safeDisplayText, type ToolCall } from "./policy.js";
+import { classifyToolCall, type ToolCall } from "./policy.js";
 
 export interface GateContext {
   hasUI: boolean;
@@ -57,11 +57,13 @@ export async function gateToolCall(
     };
   }
 
-  const subject = policy.subject ? safeDisplayText(policy.subject) : "";
-  const message = subject
-    ? `${reviewReason}\n\nRequested action:\n${subject}`
-    : reviewReason;
-
+  // JSON escaping preserves newlines, quotes, and shell separators for review.
+  // Never ask for approval of an input that cannot be shown in full.
+  const details = JSON.stringify(call.input, null, 2);
+  if (details.length > 16_000) {
+    return { block: true, reason: "The tool input is too large to display for approval." };
+  }
+  const message = `${reviewReason}\\n\\nExact tool input:\\n${details}`;
   try {
     const approved = await context.confirm(`Review ${event.toolName} call`, message);
     if (approved === true) return undefined;
