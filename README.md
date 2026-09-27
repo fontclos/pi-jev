@@ -16,6 +16,12 @@ npm run check
 pi --extension ./src/extension.ts
 ```
 
+Pi can also install the repository as a package:
+
+```sh
+pi install git:github.com/fontclos/pi-jev
+```
+
 To enable Jev, export these in the shell that launches Pi:
 
 ```sh
@@ -53,7 +59,7 @@ npm run evaluate:offline
 npm run smoke:pi
 ```
 
-The offline evaluator checks the curated cases in `eval/cases.json`. The smoke test loads this extension through Pi's own extension loader and exercises its registered `tool_call` hook without a model key.
+The offline evaluator checks the curated cases in `eval/cases.json`. The smoke test loads the package manifest through Pi's own extension loader and exercises its registered `tool_call` hook without a model key.
 
 To run the same corpus against Jev, set `OPENROUTER_API_KEY` locally and use:
 
