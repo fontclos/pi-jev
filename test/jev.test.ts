@@ -79,7 +79,7 @@ describe("OpenRouterJevAdapter", () => {
 
   it.each([
     "echo ok; " + "x".repeat(250) + "; npm publish",
-    "echo ok\\nnpm publish",
+    "echo ok\nnpm publish",
   ])("does not send an incomplete command summary to Jev", async (action) => {
     const fetchImpl = vi.fn(async () => response({}));
     const adapter = new OpenRouterJevAdapter("test-key", undefined, 4000, fetchImpl, "Run tests");
