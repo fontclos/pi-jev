@@ -119,6 +119,29 @@ describe("gateToolCall", () => {
     expect(called).toBe(false);
   });
 
+  it("shows the full escaped command to a human reviewer", async () => {
+    const confirm = vi.fn(async (_title: string, _message: string) => false);
+    await gateToolCall(
+      { toolName: "bash", input: { command: "echo first\\necho second" } },
+      { hasUI: true, confirm },
+    );
+
+    expect(confirm).toHaveBeenCalledOnce();
+    expect(confirm.mock.calls[0]?.[1]).toContain("echo first\\\\necho second");
+  });
+
+  it("blocks tool input too large for complete review", async () => {
+    const confirm = vi.fn(async (_title: string, _message: string) => true);
+    const result = await gateToolCall(
+      { toolName: "write", input: { path: "large.txt", content: "x".repeat(17_000) } },
+      { hasUI: true, confirm },
+    );
+
+    expect(result?.block).toBe(true);
+    expect(result?.reason).toContain("too large");
+    expect(confirm).not.toHaveBeenCalled();
+  });
+
   it("blocks if approval UI is unavailable", async () => {
     const result = await gateToolCall(
       { toolName: "bash", input: { command: "npm test" } },
