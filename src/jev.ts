@@ -42,6 +42,15 @@ export class OpenRouterJevAdapter implements DecisionAdapter {
   ) {}
 
   async decide(request: DecisionRequest): Promise<DecisionResult> {
+    // A shortened or flattened command can hide the part that determines risk.
+    // Send only complete, single-line actions and complete task scopes.
+    if (
+      safeDisplayText(request.action, 241).length > 240 ||
+      safeDisplayText(this.task, 241).length > 240 ||
+      /[\u0000-\u001f\u007f]/.test(request.action)
+    ) {
+      throw new Error("Input requires human review before a Jev request.");
+    }
     const action = redactForDecision(request.action);
     const task = redactForDecision(this.task);
     if (action.includes("[REDACTED]") || task.includes("[REDACTED]")) {
